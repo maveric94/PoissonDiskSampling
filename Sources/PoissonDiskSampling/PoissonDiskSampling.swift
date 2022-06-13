@@ -23,6 +23,11 @@ public class PoissonDiskSampling {
         let newY = point.y + radius * sin(angle)
         return CGPoint(x: newX, y: newY)
     }
+    
+    private func getGridIndex(for point: CGPoint, cellSize: CGFloat) -> (x: Int, y: Int) {
+        return (x: Int(floor(point.x / cellSize)),
+                y: Int(floor(point.y / cellSize)))
+    }
 
     private func isCandidateValid(candidate: CGPoint,
                                   size: CGSize,
@@ -40,8 +45,7 @@ public class PoissonDiskSampling {
             return false
         }
         
-        let cellIndex = (x: Int(floor(candidate.x / cellSize)),
-                         y: Int(floor(candidate.y / cellSize)))
+        let cellIndex = getGridIndex(for: candidate, cellSize: cellSize)
         
         let xRange = stride(from: max(0, cellIndex.x - 2),
                             to: min(cellIndex.x + 2, gridSize.x - 1) + 1,
@@ -73,8 +77,7 @@ public class PoissonDiskSampling {
                               cellSize: CGFloat) {
         points.append(candidate)
         activePoints.append(candidate)
-        let index = (x: Int(floor(candidate.x / cellSize)),
-                     y: Int(floor(candidate.y / cellSize)))
+        let index = getGridIndex(for: candidate, cellSize: cellSize)
         grid[index.x][index.y] = points.count - 1
     }
     
@@ -102,8 +105,12 @@ public class PoissonDiskSampling {
                        rejectionThreshold: Int = 30) -> [CGPoint] {
         let size = rect.size
         let cellSize: CGFloat = radius / sqrt(2)
-        let gridSize: (x: Int, y: Int) = (Int(ceil(size.width / cellSize)),
-                                          Int(ceil(size.height / cellSize)))
+        let gridSize: (x: Int, y: Int) = {
+            let index = getGridIndex(for: .init(x: size.width,
+                                                y: size.height),
+                                     cellSize: cellSize)
+            return (index.x + 1, index.y + 1)
+        }()
         
         var grid = Array(repeating: Array(repeating: -1,
                                           count: gridSize.y),
